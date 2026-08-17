@@ -74,7 +74,7 @@ router.post('/register', async (req, res) => {
 
   try {
     const passwordHash = md5(password);
-    const userRole = role || 'student'; // Takes role from POST body directly!
+    const userRole = 'student'; // Restrict self-registration strictly to student role
 
     // Insert into users
     const [userResult] = await db.query(

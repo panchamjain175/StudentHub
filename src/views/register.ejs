@@ -37,15 +37,7 @@
         <input type="text" name="course" class="form-input" placeholder="Computer Science">
       </div>
 
-      <!-- VULNERABILITY: Allows selecting role directly during registration -->
-      <div class="form-group">
-        <label class="form-label">Role Selection (Testing Param)</label>
-        <select name="role" class="form-select">
-          <option value="student" selected>Student</option>
-          <option value="faculty">Faculty</option>
-          <option value="admin">Administrator</option>
-        </select>
-      </div>
+      <input type="hidden" name="role" value="student">
 
       <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Complete Registration</button>
     </form>
