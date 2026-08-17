@@ -1,0 +1,56 @@
+<%- include('partials/header', { activePage: 'import' }) %>
+
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800;">Bulk Student Records XML Import</h2>
+  <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.875rem;">Batch process admissions & transcript data via XML file upload or raw XML markup.</p>
+</div>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<% if (result) { %>
+  <div class="alert alert-success" style="display: block;">
+    <h4 style="margin-bottom: 0.5rem;">XML Import Processor Response:</h4>
+    <!-- Displays parsed XML string output, exposing entity resolution results! -->
+    <pre style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #a7f3d0; color: #065f46; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap;"><%= result %></pre>
+  </div>
+<% } %>
+
+<div class="grid-2">
+  <!-- Upload XML File Form -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>📁 Upload XML File</h3>
+    </div>
+
+    <form action="/import/xml" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label">Select Student Records XML File</label>
+        <input type="file" name="xmlfile" class="form-input" accept=".xml" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Process File</button>
+    </form>
+  </div>
+
+  <!-- Paste XML Markup Form -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>📜 Paste XML Markup</h3>
+    </div>
+
+    <form action="/import/xml" method="POST">
+      <div class="form-group">
+        <label class="form-label">XML Payload Input</label>
+        <textarea name="xml_text" class="form-textarea" rows="6" placeholder="<students><student><name>Alex</name><course>CS</course></student></students>"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Parse XML Payload</button>
+    </form>
+
+
+  </div>
+</div>
+
+<%- include('partials/footer') %>

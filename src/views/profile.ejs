@@ -1,0 +1,102 @@
+<%- include('partials/header', { activePage: 'profile' }) %>
+
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+  <div>
+    <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800;">Student Profile: <%= student.full_name %></h2>
+    <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.875rem;">Student ID: <code><%= student.student_id_num %></code> • DB System ID: <code><%= student.id %></code></p>
+  </div>
+  <a href="/students/api/<%= student.id %>" target="_blank" class="btn btn-secondary btn-sm">Inspect JSON API (Vulnerable)</a>
+</div>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="grid-3" style="margin-bottom: 2rem;">
+  <!-- Avatar & Overview Card -->
+  <div class="card-light" style="text-align: center;">
+    <img src="<%= student.avatar_url %>" alt="Avatar" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--card-dark); margin-bottom: 1rem;">
+    <h3 style="font-family: var(--font-heading); font-size: 1.25rem;"><%= student.full_name %></h3>
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.85rem;"><%= student.course %></p>
+    <span class="badge badge-<%= student.role %>"><%= student.role %></span>
+
+    <form action="/vault/avatar" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem; text-align: left;">
+      <input type="hidden" name="student_id" value="<%= student.id %>">
+      <div class="form-group">
+        <label class="form-label">Upload Profile Picture</label>
+        <input type="file" name="avatar" class="form-input" accept="image/*" required>
+      </div>
+      <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">Upload Photo</button>
+    </form>
+
+    <!-- VULNERABILITY: Sensitive Data Exposure - Exposes raw MD5 password hash on profile view -->
+    <div style="margin-top: 1.5rem; padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-size: 0.75rem; text-align: left;">
+      <span style="color: var(--text-muted);">Account Password Hash (Exposed Flaw):</span><br>
+      <code style="color: var(--status-danger); word-break: break-all;"><%= student.md5_password %></code>
+    </div>
+  </div>
+
+  <!-- Editable Details Form (VULNERABILITY: Privilege Escalation & IDOR) -->
+  <div class="card-light" style="grid-column: span 2;">
+    <div class="card-title-row">
+      <h3>Edit Profile Information</h3>
+    </div>
+
+    <form action="/students/profile/update" method="POST">
+      <!-- VULNERABLE IDOR INPUT FIELD -->
+      <input type="hidden" name="student_id" value="<%= student.id %>">
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-input" value="<%= student.full_name %>" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Course Program</label>
+          <input type="text" name="course" class="form-input" value="<%= student.course %>">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="text" name="phone" class="form-input" value="<%= student.phone || '' %>">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">GitHub Repository URL</label>
+          <input type="text" name="github_url" class="form-input" value="<%= student.github_url || '' %>">
+        </div>
+      </div>
+
+      <!-- VULNERABILITY: Mass Assignment / Privilege Escalation -->
+      <div class="form-group">
+        <label class="form-label">System User Role (Modifiable Parameter)</label>
+        <select name="role" class="form-select">
+          <option value="student" <%= student.role === 'student' ? 'selected' : '' %>>student</option>
+          <option value="faculty" <%= student.role === 'faculty' ? 'selected' : '' %>>faculty</option>
+          <option value="admin" <%= student.role === 'admin' ? 'selected' : '' %>>admin</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Physical Address</label>
+        <textarea name="address" class="form-textarea" rows="2"><%= student.address || '' %></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bio & Personal Statement</label>
+        <textarea name="bio" class="form-textarea" rows="3"><%= student.bio || '' %></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

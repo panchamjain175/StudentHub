@@ -1,0 +1,25 @@
+<%- include('partials/header') %>
+
+<div style="max-width: 800px; margin: 3rem auto;">
+  <div class="card" style="border-color: rgba(239, 68, 68, 0.5);">
+    <div class="card-header">
+      <h2 style="color: var(--status-danger);"><%= error || 'Application Error' %></h2>
+    </div>
+    
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);"><%= message || 'An unexpected error occurred.' %></p>
+
+    <!-- VULNERABILITY: Verbose error message dumps full stack trace to client -->
+    <% if (typeof stack !== 'undefined' && stack) { %>
+      <div style="margin-top: 1.5rem;">
+        <h4 style="margin-bottom: 0.5rem; color: var(--text-muted);">Debug Stack Trace:</h4>
+        <pre style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: var(--radius-sm); color: #fca5a5; font-size: 0.85rem; overflow-x: auto;"><%= stack %></pre>
+      </div>
+    <% } %>
+
+    <div style="margin-top: 2rem;">
+      <a href="/dashboard" class="btn btn-primary">Return to Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

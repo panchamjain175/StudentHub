@@ -1,0 +1,99 @@
+<%- include('partials/header', { activePage: 'records' }) %>
+
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800;">Academic Records: <%= student.full_name %></h2>
+  <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.875rem;">Official course grades, transcript details, and academic certificates.</p>
+</div>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="grid-2" style="margin-bottom: 2rem;">
+  <!-- Course Grades Table -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>📊 Course Grades & Attendance</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Course</th>
+            <th>Name</th>
+            <th>Grade</th>
+            <th>Attendance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% records.forEach(r => { %>
+            <tr>
+              <td><code><%= r.course_code %></code></td>
+              <td><%= r.course_name %></td>
+              <td><span class="badge badge-student" style="font-size: 0.8rem;"><%= r.grade %></span></td>
+              <td><%= r.attendance_percentage %>%</td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Certificate Upload & Management Card -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>🏆 Student Certificates</h3>
+    </div>
+
+    <!-- Upload Form -->
+    <form action="/records/certificates/upload" method="POST" enctype="multipart/form-data" style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed #e2e8f0;">
+      <input type="hidden" name="student_id" value="<%= student.id %>">
+      <div class="form-group">
+        <label class="form-label">Certificate Title</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g. AWS Certified Developer" required>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Issuer</label>
+          <input type="text" name="issuer" class="form-input" placeholder="Amazon Web Services" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issue Date</label>
+          <input type="date" name="issue_date" class="form-input" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Certificate File (PDF / Image)</label>
+        <input type="file" name="certificate" class="form-input" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm">Upload Certificate</button>
+    </form>
+
+    <!-- Certificate Downloads List -->
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <% if (certificates && certificates.length > 0) { %>
+        <% certificates.forEach(c => { %>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+            <div>
+              <strong style="color: var(--text-primary); font-size: 0.9rem;"><%= c.title %></strong><br>
+              <span style="font-size: 0.75rem; color: var(--text-muted);"><%= c.issuer %> • <%= c.issue_date ? new Date(c.issue_date).toLocaleDateString() : '' %></span>
+            </div>
+            <!-- VULNERABILITY: Download endpoint does not verify certificate ownership -->
+            <a href="/records/certificates/download/<%= c.id %>" class="btn btn-secondary btn-sm">Download PDF</a>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">No certificates uploaded yet.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

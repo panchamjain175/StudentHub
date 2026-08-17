@@ -1,0 +1,55 @@
+<%- include('partials/header') %>
+
+<div style="max-width: 500px; margin: 3rem auto;">
+  <div class="card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2>Student Registration</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Register a new student account</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <form action="/auth/register" method="POST">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" name="full_name" class="form-input" placeholder="e.g. Michael Scott" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-input" placeholder="e.g. m_scott" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="email" class="form-input" placeholder="m.scott@student.lab" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Academic Program / Course</label>
+        <input type="text" name="course" class="form-input" placeholder="Computer Science">
+      </div>
+
+      <!-- VULNERABILITY: Allows selecting role directly during registration -->
+      <div class="form-group">
+        <label class="form-label">Role Selection (Testing Param)</label>
+        <select name="role" class="form-select">
+          <option value="student" selected>Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Complete Registration</button>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

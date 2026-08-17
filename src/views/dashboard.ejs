@@ -1,0 +1,156 @@
+<%- include('partials/header', { activePage: 'dashboard' }) %>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<!-- Main Dashboard Grid Layout (Matching iDraft Design) -->
+<div class="grid-3" style="margin-bottom: 1.5rem;">
+  <!-- Overall Information (iDraft Dark Card Widget) -->
+  <div class="card-dark" style="grid-column: span 2;">
+    <div class="card-title-row">
+      <h3 style="color: #ffffff;">Overall Academic Information</h3>
+      <span style="font-size: 0.8rem; opacity: 0.7;">Semester 2026</span>
+    </div>
+
+    <div style="display: flex; gap: 2rem; align-items: baseline; margin-top: 0.5rem;">
+      <div>
+        <div style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-heading); line-height: 1;">
+          <%= student ? student.gpa : '3.85' %>
+        </div>
+        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;">Cumulative GPA</div>
+      </div>
+      <div>
+        <div style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-heading); line-height: 1;">
+          <%= student ? student.course : 'Computer Science' %>
+        </div>
+        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;">Enrolled Degree Program</div>
+      </div>
+    </div>
+
+    <!-- 3 White Pill Stat Boxes -->
+    <div class="stat-pill-grid">
+      <div class="stat-pill-box">
+        <div class="stat-pill-number"><%= student ? student.student_id_num : 'STU-2024' %></div>
+        <div class="stat-pill-label">Student ID</div>
+      </div>
+      <div class="stat-pill-box">
+        <div class="stat-pill-number">Sem <%= student ? student.semester : '4' %></div>
+        <div class="stat-pill-label">Current Term</div>
+      </div>
+      <div class="stat-pill-box">
+        <div class="stat-pill-number">100%</div>
+        <div class="stat-pill-label">Good Standing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Progress Light Card Widget -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>Academic Progress</h3>
+      <span class="badge badge-student">+20%</span>
+    </div>
+    <div style="text-align: center; padding: 1rem 0;">
+      <div style="width: 100px; height: 100px; border-radius: 50%; border: 8px solid #141416; border-left-color: #e4e4e7; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem;">
+        95%
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.75rem;">Attendance & Assignment Completion</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lower Section Grid -->
+<div class="grid-2" style="margin-bottom: 1.5rem;">
+  <!-- Shared Class Notes Card -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>📚 Shared Class Notes & Materials</h3>
+      <a href="/notes" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+
+    <% if (recentNotes && recentNotes.length > 0) { %>
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <% recentNotes.forEach(note => { %>
+          <div style="padding: 0.85rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+              <strong style="color: var(--text-primary);"><%= note.title %></strong>
+              <span class="badge badge-student"><%= note.subject %></span>
+            </div>
+            <!-- VULNERABILITY: Stored XSS -->
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem;"><%- note.content.substring(0, 100) %></div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Posted by <%= note.author_name %></div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p style="color: var(--text-muted);">No class notes available yet.</p>
+    <% } %>
+  </div>
+
+  <!-- Student Directory Quick List -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>👥 Student Directory Quick Lookup</h3>
+      <a href="/students/search" class="btn btn-secondary btn-sm">Directory</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>ID Number</th>
+            <th>Course</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentStudents.forEach(s => { %>
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <img src="<%= s.avatar_url || '/uploads/avatars/default.png' %>" class="user-avatar-img" style="width:26px; height:26px;">
+                  <span style="font-weight: 600;"><%= s.full_name %></span>
+                </div>
+              </td>
+              <td><code><%= s.student_id_num %></code></td>
+              <td><%= s.course %></td>
+              <!-- VULNERABILITY: IDOR Profile View Link -->
+              <td><a href="/students/profile?id=<%= s.id %>" class="btn btn-secondary btn-sm">Profile</a></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Dark Cards Row -->
+<div class="grid-3">
+  <div class="card-dark">
+    <div class="card-title-row">
+      <h3 style="color: #ffffff;">Cloud Security Project</h3>
+      <span style="font-size: 0.75rem; opacity: 0.7;">Completed</span>
+    </div>
+    <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">Distributed storage solution with custom encryption and access controls.</p>
+  </div>
+
+  <div class="card-dark">
+    <div class="card-title-row">
+      <h3 style="color: #ffffff;">Packet Analyzer Lab</h3>
+      <span style="font-size: 0.75rem; opacity: 0.7;">In Progress</span>
+    </div>
+    <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">Python raw socket sniffer and packet analyzer for lab exercises.</p>
+  </div>
+
+  <div class="card-dark">
+    <div class="card-title-row">
+      <h3 style="color: #ffffff;">Web Pentesting Lab</h3>
+      <span style="font-size: 0.75rem; opacity: 0.7;">Active</span>
+    </div>
+    <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">OWASP Top 10 vulnerability research and penetration testing environment.</p>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

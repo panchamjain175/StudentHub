@@ -1,0 +1,88 @@
+<%- include('partials/header', { activePage: 'vault' }) %>
+
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800;">Document Vault: <%= student.full_name %></h2>
+  <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.875rem;">Secure repository for official identity documents, transcripts, and financial records.</p>
+</div>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="grid-3" style="margin-bottom: 2rem;">
+  <!-- Upload New Document Form -->
+  <div class="card-light">
+    <div class="card-title-row">
+      <h3>🔒 Upload Document</h3>
+    </div>
+
+    <form action="/vault/upload" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="student_id" value="<%= student.id %>">
+      
+      <div class="form-group">
+        <label class="form-label">Document Category</label>
+        <select name="doc_type" class="form-select" required>
+          <option value="ID Proof">ID Proof (Passport / License)</option>
+          <option value="Transcript">Official Academic Transcript</option>
+          <option value="Resume">Resume / CV Document</option>
+          <option value="Financial">Financial Record</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select File</label>
+        <input type="file" name="document" class="form-input" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Upload to Vault</button>
+    </form>
+  </div>
+
+  <!-- Documents Vault List -->
+  <div class="card-light" style="grid-column: span 2;">
+    <div class="card-title-row">
+      <h3>📁 Stored Vault Documents</h3>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>File Name</th>
+            <th>Uploaded Date</th>
+            <th>Direct Static Path (Exposed)</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (docs && docs.length > 0) { %>
+            <% docs.forEach(d => { %>
+              <tr>
+                <td><span class="badge badge-student"><%= d.doc_type %></span></td>
+                <td><strong><%= d.file_name %></strong></td>
+                <td><%= new Date(d.uploaded_at).toLocaleDateString() %></td>
+                <!-- VULNERABILITY: Static directory path exposed without authentication control -->
+                <td>
+                  <a href="<%= d.file_path %>" target="_blank" style="font-family: monospace; font-size: 0.75rem; color: #0284c7;"><%= d.file_path %></a>
+                </td>
+                <!-- VULNERABILITY: IDOR download endpoint -->
+                <td><a href="/vault/download/<%= d.id %>" class="btn btn-secondary btn-sm">Download</a></td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No documents uploaded to vault yet.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

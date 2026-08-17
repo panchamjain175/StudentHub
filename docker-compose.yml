@@ -1,0 +1,67 @@
+version: '3.8'
+
+# ================================================================
+# StudentHub Security Training Lab — Docker Compose
+# ISOLATED DEPLOYMENT: All ports bound to 127.0.0.1 ONLY.
+# DO NOT change port bindings to 0.0.0.0 or expose publicly.
+# ================================================================
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: studenthub_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-studenthub}
+    ports:
+      # Localhost-only binding — unreachable from LAN/internet
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - studenthub_mysql_data:/var/lib/mysql
+    networks:
+      - studenthub_isolated
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: studenthub_app
+    restart: unless-stopped
+    ports:
+      # Localhost-only binding — unreachable from LAN/internet
+      - "127.0.0.1:3000:3000"
+    environment:
+      PORT: ${PORT:-3000}
+      NODE_ENV: development
+      DB_HOST: db
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-rootpass}
+      DB_NAME: ${DB_NAME:-studenthub}
+      DB_PORT: 3306
+      SESSION_SECRET: ${SESSION_SECRET:-supersecret_studenthub_key_2026}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - studenthub_isolated
+
+# Dedicated isolated bridge network — not the default Docker network
+networks:
+  studenthub_isolated:
+    driver: bridge
+    name: studenthub_isolated_net
+    # Internal-only: containers can talk to each other but the network
+    # itself is not directly routable from the host's external interfaces.
+    # Port publishing (127.0.0.1 bound above) is the only entry point.
+
+volumes:
+  studenthub_mysql_data:
+    name: studenthub_mysql_data

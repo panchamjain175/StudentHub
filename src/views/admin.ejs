@@ -1,0 +1,90 @@
+<%- include('partials/header', { activePage: 'admin' }) %>
+
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: var(--status-danger);">Admin Control Dashboard</h2>
+  <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.875rem;">System user administration, privilege configuration, and platform metrics.</p>
+</div>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<!-- Stats Grid -->
+<div class="grid-3" style="margin-bottom: 1.5rem;">
+  <div class="card-dark">
+    <div style="font-size: 0.8rem; opacity: 0.7; font-weight: 700;">TOTAL USERS</div>
+    <div style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-heading); margin-top: 0.25rem;"><%= stats.users %></div>
+  </div>
+
+  <div class="card-light">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 700;">STUDENTS</div>
+    <div style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-heading); color: var(--card-dark); margin-top: 0.25rem;"><%= stats.students %></div>
+  </div>
+
+  <div class="card-light">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 700;">CLASS NOTES</div>
+    <div style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-heading); color: var(--card-dark); margin-top: 0.25rem;"><%= stats.notes %></div>
+  </div>
+</div>
+
+<!-- System Users Management Table -->
+<div class="card-light">
+  <div class="card-title-row">
+    <h3>⚙️ User Account Administration</h3>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Username</th>
+          <th>Full Name / ID</th>
+          <th>Email Address</th>
+          <th>Role</th>
+          <th>MD5 Password Hash (Exposed)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(u => { %>
+          <tr>
+            <td><code>#<%= u.id %></code></td>
+            <td><strong><%= u.username %></strong></td>
+            <td><%= u.full_name || 'N/A' %> (<%= u.student_id_num || 'System' %>)</td>
+            <td><%= u.email %></td>
+            <td><span class="badge badge-<%= u.role %>"><%= u.role %></span></td>
+            <!-- VULNERABILITY: Sensitive Data Exposure -->
+            <td><code style="font-size: 0.75rem; color: var(--status-danger);"><%= u.md5_hash %></code></td>
+            <td>
+              <div style="display: flex; gap: 0.5rem;">
+                <!-- Role Modification Form -->
+                <form action="/admin/users/role" method="POST" style="display: flex; gap: 0.25rem;">
+                  <input type="hidden" name="user_id" value="<%= u.id %>">
+                  <select name="new_role" class="form-select" style="padding: 0.2rem 0.4rem; font-size: 0.8rem; width: auto;">
+                    <option value="student" <%= u.role === 'student' ? 'selected' : '' %>>student</option>
+                    <option value="faculty" <%= u.role === 'faculty' ? 'selected' : '' %>>faculty</option>
+                    <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+                  </select>
+                  <button type="submit" class="btn btn-secondary btn-sm">Set</button>
+                </form>
+
+                <!-- Delete User Form -->
+                <form action="/admin/users/delete" method="POST" onsubmit="return confirm('Delete user account?');">
+                  <input type="hidden" name="user_id" value="<%= u.id %>">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

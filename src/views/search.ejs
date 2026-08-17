@@ -1,0 +1,69 @@
+<%- include('partials/header', { activePage: 'search' }) %>
+
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800;">Student Lookup & Directory</h2>
+  <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.875rem;">Search enrolled students by full name, ID number, or course program.</p>
+</div>
+
+<div class="card-light" style="margin-bottom: 1.5rem;">
+  <form action="/students/search" method="GET" style="display: flex; gap: 1rem;">
+    <input type="text" name="q" class="form-input" placeholder="Search by name, ID (e.g. STU-2024-001), or payload..." value="<%= searchQuery %>">
+    <button type="submit" class="btn btn-primary">Search</button>
+  </form>
+</div>
+
+<!-- VULNERABILITY: Reflected XSS -->
+<% if (searchQuery) { %>
+  <div style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.9rem;">
+    Search results for query: <strong><%- searchQuery %></strong>
+  </div>
+<% } %>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="card-light">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Student ID</th>
+          <th>Course Program</th>
+          <th>Semester</th>
+          <th>GPA</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (students && students.length > 0) { %>
+          <% students.forEach(s => { %>
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <img src="<%= s.avatar_url || '/uploads/avatars/default.png' %>" class="user-avatar-img" style="width:28px; height:28px;">
+                  <strong style="color: var(--text-primary);"><%= s.full_name %></strong>
+                </div>
+              </td>
+              <td><code><%= s.student_id_num %></code></td>
+              <td><%= s.course %></td>
+              <td>Sem <%= s.semester %></td>
+              <td><strong><%= s.gpa %></strong></td>
+              <!-- VULNERABILITY: IDOR Profile View -->
+              <td><a href="/students/profile?id=<%= s.id %>" class="btn btn-secondary btn-sm">View Profile</a></td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              No matching student records found.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
