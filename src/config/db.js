@@ -1,9 +1,11 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Clean dataset ready for live user registrations & file uploads
+// Clean dataset ready for live user registrations with 1 fixed admin account
 const memoryDb = {
-  users: [],
+  users: [
+    { id: 1, username: 'admin', password: '0192023a7bbd73250516f069df18b500', email: 'admin@studenthub.lab', role: 'admin', created_at: new Date() }
+  ],
   students: [],
   academic_records: [],
   projects: [],

@@ -114,4 +114,7 @@ CREATE TABLE password_resets (
     used TINYINT(1) DEFAULT 0
 );
 
--- Clean database initialization ready for user registration.
+-- 1 Fixed System Administrator Account (admin / admin123)
+INSERT INTO users (id, username, password, email, role) VALUES
+(1, 'admin', '0192023a7bbd73250516f069df18b500', 'admin@studenthub.lab', 'admin');
+
