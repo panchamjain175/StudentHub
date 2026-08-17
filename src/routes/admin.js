@@ -3,10 +3,8 @@ const router = express.Router();
 const { db } = require('../config/db');
 const { isAuthenticated } = require('../middleware/auth');
 
-// GET Admin Dashboard
-// VULNERABILITY: Missing strict server-side role check!
-// Accessible by directly navigating to /admin/dashboard or setting X-User-Role header
-router.get('/dashboard', isAuthenticated, async (req, res) => {
+// GET Admin Dashboard (both /admin and /admin/dashboard)
+const renderAdminDashboard = async (req, res) => {
   try {
     // Fetch system stats
     const [userCount] = await db.query('SELECT COUNT(*) as count FROM users');
@@ -23,9 +21,9 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
 
     res.render('admin', { 
       stats: {
-        users: userCount[0].count,
-        students: studentCount[0].count,
-        notes: notesCount[0].count
+        users: userCount[0] ? userCount[0].count : users.length,
+        students: studentCount[0] ? studentCount[0].count : 0,
+        notes: notesCount[0] ? notesCount[0].count : 0
       },
       users, 
       success: req.query.success || null, 
@@ -34,7 +32,10 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
   } catch (err) {
     res.render('error', { error: 'Admin Dashboard Error', message: err.message });
   }
-});
+};
+
+router.get('/', isAuthenticated, renderAdminDashboard);
+router.get('/dashboard', isAuthenticated, renderAdminDashboard);
 
 // POST Admin Change User Role
 // VULNERABILITY: Allows changing role without verification

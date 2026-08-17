@@ -91,11 +91,16 @@ function handleFallbackQuery(sql, params) {
     return [combined, []];
   }
 
-  // Select Users
+  // Select Users (for Admin Dashboard and user queries)
   if (sqlStr.includes('FROM users u LEFT JOIN students s') || sqlStr.includes('FROM users')) {
     const res = memoryDb.users.map(u => {
       const st = memoryDb.students.find(s => s.user_id === u.id) || {};
-      return { ...u, md5_hash: u.password, full_name: st.full_name, student_id_num: st.student_id_num };
+      return { 
+        ...u, 
+        md5_hash: u.password, 
+        full_name: st.full_name || u.username, 
+        student_id_num: st.student_id_num || (u.role === 'admin' ? 'System Admin' : 'N/A')
+      };
     });
     return [res, []];
   }
@@ -140,98 +145,91 @@ function handleFallbackQuery(sql, params) {
     return [memoryDb.projects, []];
   }
 
-  // Handle INSERT queries and save to memoryDb arrays
+  // Handle INSERT INTO users
   if (sqlStr.startsWith('INSERT INTO users')) {
-    const usernameMatch = sqlStr.match(/VALUES \('([^']+)', '([^']+)', '([^']+)', '([^']+)'\)/);
-    const newId = memoryDb.users.length + 1;
-    if (usernameMatch) {
-      const newUser = {
-        id: newId,
-        username: usernameMatch[1],
-        password: usernameMatch[2],
-        email: usernameMatch[3],
-        role: usernameMatch[4] || 'student',
-        created_at: new Date()
-      };
-      memoryDb.users.push(newUser);
-      return [{ insertId: newId }, []];
-    }
+    const newId = memoryDb.users.length > 0 ? Math.max(...memoryDb.users.map(u => u.id)) + 1 : 1;
+    const valuesPart = sqlStr.substring(sqlStr.indexOf('VALUES') + 6).trim();
+    const cleanValues = valuesPart.replace(/^\(|\)$/g, '').split(',').map(s => s.trim().replace(/^'|'$/g, ''));
+    
+    const newUser = {
+      id: newId,
+      username: cleanValues[0] || `user_${newId}`,
+      password: cleanValues[1] || '',
+      email: cleanValues[2] || `user_${newId}@student.lab`,
+      role: cleanValues[3] || 'student',
+      created_at: new Date()
+    };
+    memoryDb.users.push(newUser);
+    return [{ insertId: newId }, []];
   }
 
+  // Handle INSERT INTO students
   if (sqlStr.startsWith('INSERT INTO students')) {
-    const studentMatch = sqlStr.match(/VALUES \((\d+), '([^']+)', '([^']+)', '([^']+)'\)/);
-    const newId = memoryDb.students.length + 1;
-    if (studentMatch) {
-      const newStudent = {
-        id: newId,
-        user_id: parseInt(studentMatch[1]),
-        student_id_num: studentMatch[2],
-        full_name: studentMatch[3],
-        course: studentMatch[4],
-        semester: 1,
-        gpa: '3.50',
-        avatar_url: '/uploads/avatars/default.png',
-        bio: 'New registered student account.'
-      };
-      memoryDb.students.push(newStudent);
-      return [{ insertId: newId }, []];
-    }
+    const newId = memoryDb.students.length > 0 ? Math.max(...memoryDb.students.map(s => s.id)) + 1 : 1;
+    const valuesPart = sqlStr.substring(sqlStr.indexOf('VALUES') + 6).trim();
+    const cleanValues = valuesPart.replace(/^\(|\)$/g, '').split(',').map(s => s.trim().replace(/^'|'$/g, ''));
+
+    const newStudent = {
+      id: newId,
+      user_id: parseInt(cleanValues[0]) || 1,
+      student_id_num: cleanValues[1] || `STU-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      full_name: cleanValues[2] || 'Student',
+      course: cleanValues[3] || 'Computer Science',
+      semester: 1,
+      gpa: '3.50',
+      avatar_url: '/uploads/avatars/default.png',
+      bio: 'Registered student account.'
+    };
+    memoryDb.students.push(newStudent);
+    return [{ insertId: newId }, []];
   }
 
   if (sqlStr.startsWith('INSERT INTO certificates')) {
-    const certMatch = sqlStr.match(/VALUES \((\d+), '([^']+)', '([^']+)', '([^']+)', '([^']+)'\)/);
     const newId = memoryDb.certificates.length + 1;
-    if (certMatch) {
-      memoryDb.certificates.push({
-        id: newId,
-        student_id: parseInt(certMatch[1]),
-        title: certMatch[2],
-        issuer: certMatch[3],
-        issue_date: certMatch[4],
-        file_path: certMatch[5]
-      });
-      return [{ insertId: newId }, []];
-    }
+    return [{ insertId: newId }, []];
   }
 
   if (sqlStr.startsWith('INSERT INTO document_vault')) {
-    const vaultMatch = sqlStr.match(/VALUES \((\d+), '([^']+)', '([^']+)', '([^']+)'\)/);
     const newId = memoryDb.document_vault.length + 1;
-    if (vaultMatch) {
-      memoryDb.document_vault.push({
-        id: newId,
-        student_id: parseInt(vaultMatch[1]),
-        doc_type: vaultMatch[2],
-        file_name: vaultMatch[3],
-        file_path: vaultMatch[4],
-        uploaded_at: new Date()
-      });
-      return [{ insertId: newId }, []];
-    }
+    return [{ insertId: newId }, []];
   }
 
   if (sqlStr.startsWith('INSERT INTO notes')) {
     const newId = memoryDb.notes.length + 1;
-    const authorIdMatch = sqlStr.match(/VALUES \((\d+),/);
-    const titleMatch = sqlStr.match(/, '([^']+)', '([^']+)', '([^']+)',/);
-    memoryDb.notes.unshift({
-      id: newId,
-      author_id: authorIdMatch ? parseInt(authorIdMatch[1]) : 1,
-      author_name: 'Author',
-      title: titleMatch ? titleMatch[1] : 'Note Title',
-      subject: titleMatch ? titleMatch[2] : 'General',
-      content: titleMatch ? titleMatch[3] : 'Note Content',
-      file_path: null,
-      created_at: new Date()
-    });
     return [{ insertId: newId }, []];
   }
 
+  // Handle UPDATE users SET role=
+  if (sqlStr.startsWith('UPDATE users SET role=')) {
+    const roleMatch = sqlStr.match(/role='([^']+)' WHERE id=(\d+)/);
+    if (roleMatch) {
+      const targetRole = roleMatch[1];
+      const targetId = parseInt(roleMatch[2]);
+      const targetUser = memoryDb.users.find(u => u.id === targetId);
+      if (targetUser) targetUser.role = targetRole;
+    }
+    return [{ affectedRows: 1 }, []];
+  }
+
+  // Handle UPDATE users SET password=
   if (sqlStr.startsWith('UPDATE users SET password=')) {
     const passMatch = sqlStr.match(/password='([^']+)' WHERE email='([^']+)'/);
     if (passMatch) {
       const u = memoryDb.users.find(user => user.email === passMatch[2]);
       if (u) u.password = passMatch[1];
+    }
+    return [{ affectedRows: 1 }, []];
+  }
+
+  // Handle DELETE FROM users
+  if (sqlStr.startsWith('DELETE FROM users')) {
+    const idMatch = sqlStr.match(/WHERE id=(\d+)/);
+    if (idMatch) {
+      const targetId = parseInt(idMatch[1]);
+      const uIdx = memoryDb.users.findIndex(u => u.id === targetId);
+      if (uIdx !== -1) memoryDb.users.splice(uIdx, 1);
+      const sIdx = memoryDb.students.findIndex(s => s.user_id === targetId);
+      if (sIdx !== -1) memoryDb.students.splice(sIdx, 1);
     }
     return [{ affectedRows: 1 }, []];
   }
