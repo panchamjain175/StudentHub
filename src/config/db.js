@@ -1,45 +1,15 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Default seed dataset for standalone live dev server (when MySQL daemon is absent)
+// Clean dataset ready for live user registrations & file uploads
 const memoryDb = {
-  users: [
-    { id: 1, username: 'admin', password: '0192023a7bbd73250516f069df18b500', email: 'admin@studenthub.lab', role: 'admin', created_at: new Date() },
-    { id: 2, username: 'prof_smith', password: '482c811da5d5b4bc6d497ffa98491e38', email: 'smith@faculty.studenthub.lab', role: 'faculty', created_at: new Date() },
-    { id: 3, username: 'alex_j', password: '482c811da5d5b4bc6d497ffa98491e38', email: 'alex.j@student.lab', role: 'student', created_at: new Date() },
-    { id: 4, username: 'sarah_c', password: '482c811da5d5b4bc6d497ffa98491e38', email: 'sarah.c@student.lab', role: 'student', created_at: new Date() },
-    { id: 5, username: 'michael_s', password: '482c811da5d5b4bc6d497ffa98491e38', email: 'michael.s@student.lab', role: 'student', created_at: new Date() }
-  ],
-  students: [
-    { id: 1, user_id: 3, student_id_num: 'STU-2024-001', full_name: 'Alex Johnson', dob: '2002-04-15', phone: '+1-555-0192', address: '124 Innovation Way, Tech City, TC 90210', course: 'Computer Science', semester: 4, gpa: '3.85', avatar_url: '/uploads/avatars/default.png', github_url: 'https://github.com/alexj-dev', bio: 'Passionate about cyber defense, web development, and cloud systems.' },
-    { id: 2, user_id: 4, student_id_num: 'STU-2024-002', full_name: 'Sarah Connor', dob: '2001-11-20', phone: '+1-555-0144', address: '742 Evergreen Terrace, Springfield, SP 12345', course: 'Cyber Security', semester: 6, gpa: '3.92', avatar_url: '/uploads/avatars/default.png', github_url: 'https://github.com/sconnor-sec', bio: 'Focusing on network security, penetration testing, and digital forensics.' },
-    { id: 3, user_id: 5, student_id_num: 'STU-2024-003', full_name: 'Michael Scott', dob: '2003-01-08', phone: '+1-555-0188', address: '1725 Slough Avenue, Scranton, PA 18503', course: 'Information Systems', semester: 2, gpa: '3.20', avatar_url: '/uploads/avatars/default.png', github_url: 'https://github.com/mscott-is', bio: 'Interested in database systems, business analytics, and IT management.' }
-  ],
-  academic_records: [
-    { id: 1, student_id: 1, course_code: 'CS101', course_name: 'Introduction to Computer Science', grade: 'A', credits: 4, attendance_percentage: 98.0, semester: 1 },
-    { id: 2, student_id: 1, course_code: 'CS201', course_name: 'Data Structures & Algorithms', grade: 'A-', credits: 4, attendance_percentage: 95.5, semester: 2 },
-    { id: 3, student_id: 1, course_code: 'CS301', course_name: 'Database Management Systems', grade: 'A', credits: 3, attendance_percentage: 97.0, semester: 3 },
-    { id: 4, student_id: 1, course_code: 'CS401', course_name: 'Web Application Security', grade: 'A+', credits: 3, attendance_percentage: 100.0, semester: 4 },
-    { id: 5, student_id: 2, course_code: 'SEC101', course_name: 'Principles of Information Security', grade: 'A+', credits: 4, attendance_percentage: 99.0, semester: 1 },
-    { id: 6, student_id: 2, course_code: 'SEC202', course_name: 'Ethical Hacking & Pentesting', grade: 'A', credits: 4, attendance_percentage: 96.5, semester: 3 }
-  ],
-  projects: [
-    { id: 1, student_id: 1, title: 'Cloud File Manager', description: 'Distributed file storage solution with custom encryption.', tech_stack: 'Node.js, Express, AWS S3', github_url: 'https://github.com/alexj-dev/cloud-file-mgr' },
-    { id: 2, student_id: 2, title: 'Packet Sniffer Lab', description: 'Python-based raw socket packet analyzer for lab exercises.', tech_stack: 'Python, Scapy, Wireshark', github_url: 'https://github.com/sconnor-sec/packet-lab' }
-  ],
-  certificates: [
-    { id: 1, student_id: 1, title: 'CompTIA Security+ Certification', issuer: 'CompTIA', issue_date: '2025-06-15', file_path: '/uploads/certificates/alex_security_plus.pdf' },
-    { id: 2, student_id: 2, title: 'Certified Ethical Hacker (CEH)', issuer: 'EC-Council', issue_date: '2025-08-01', file_path: '/uploads/certificates/sarah_ceh.pdf' }
-  ],
-  document_vault: [
-    { id: 1, student_id: 1, doc_type: 'ID Proof', file_name: 'alex_passport_scan.pdf', file_path: '/uploads/vault/alex_passport_scan.pdf', uploaded_at: new Date() },
-    { id: 2, student_id: 1, doc_type: 'Transcript', file_name: 'alex_official_transcript.pdf', file_path: '/uploads/vault/alex_official_transcript.pdf', uploaded_at: new Date() },
-    { id: 3, student_id: 2, doc_type: 'ID Proof', file_name: 'sarah_driver_license.pdf', file_path: '/uploads/vault/sarah_driver_license.pdf', uploaded_at: new Date() }
-  ],
-  notes: [
-    { id: 1, author_id: 2, author_name: 'Prof. Smith', title: 'CS401 - Web Security Fundamentals', subject: 'CS401', content: 'Core notes regarding HTTP headers, session management, and OWASP Top 10 vulnerabilities.', file_path: '/uploads/notes/cs401_lecture1.pdf', created_at: new Date() },
-    { id: 2, author_id: 3, author_name: 'Alex Johnson', title: 'SQL Injection Cheatsheet', subject: 'CS401', content: 'Quick reference guide for testing parameter injection points.<script>console.log("XSS Test Triggered!");</script>', file_path: null, created_at: new Date() }
-  ]
+  users: [],
+  students: [],
+  academic_records: [],
+  projects: [],
+  certificates: [],
+  document_vault: [],
+  notes: []
 };
 
 // Create real MySQL Pool
