@@ -134,13 +134,19 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(` STUDENTHUB LAB — ISOLATED TRAINING USE ONLY`);
-  console.log(`=======================================================`);
-  console.log(` [!] StudentHub Security Lab Server active on port ${PORT}`);
-  console.log(` [!] ENVIRONMENT: ${process.env.NODE_ENV || 'development'}`);
-  console.log(` [!] WARNING: FOR LOCAL AUTHORIZED LAB TESTING ONLY`);
-  console.log(` [!] DO NOT EXPOSE TO PUBLIC NETWORKS`);
-  console.log(`=======================================================`);
-});
+if (require.main === module || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(` STUDENTHUB LAB — ISOLATED TRAINING USE ONLY`);
+    console.log(`=======================================================`);
+    console.log(` [!] StudentHub Security Lab Server active on port ${PORT}`);
+    console.log(` [!] ENVIRONMENT: ${process.env.NODE_ENV || 'development'}`);
+    console.log(` [!] WARNING: FOR LOCAL AUTHORIZED LAB TESTING ONLY`);
+    console.log(` [!] DO NOT EXPOSE TO PUBLIC NETWORKS`);
+    console.log(`=======================================================`);
+  });
+}
+
+// Export Express app for Vercel serverless deployment
+module.exports = app;
+

@@ -130,6 +130,26 @@ Alternatively, use an iptables/Windows Firewall rule to restrict source IPs.
 
 ---
 
+## Vercel Serverless Deployment Setup
+
+The project includes [`vercel.json`](file:///c:/Users/User/Ethone/vercel.json) and Express module exports in [`src/app.js`](file:///c:/Users/User/Ethone/src/app.js) to support Vercel deployment:
+
+1. **Commit and Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Add Vercel serverless deployment setup"
+   git push origin main
+   ```
+2. **Import into Vercel**:
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard) -> **New Project** -> Select your GitHub repository.
+3. **Environment Variables**:
+   - Set `NODE_ENV=development`
+   - Set `SESSION_SECRET=supersecret_studenthub_key_2026`
+   - Set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (if using an external MySQL server, or leave empty for embedded database fallback).
+4. **Deploy**: Click **Deploy**.
+
+---
+
 ## Architecture
 
 ```
